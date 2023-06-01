@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #343a40;
+      color: #f8f9fa;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/sql-formatter@2.3.3/dist/sql-formatter.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1 class="my-4 text-center">SQL Debug Tool</h1>
+    <div class="alert alert-info" role="alert">
+      This tool allows you to paste a SQL debug notification into the input box below. When you press the 'Process' button, the tool will replace all '?' characters in the SQL statement with the corresponding binding values from the 'withBindings' section of the debug notification. It then formats the resulting SQL statement for readability.
+    </div>
+    <textarea id="sqlInput" class="form-control mb-3" rows="10" placeholder="Paste SQL debug notification here"></textarea>
+    <button id="processButton" class="btn btn-primary mb-3" onclick="processSQL()">Process</button>
+    <textarea id="sqlOutput" class="form-control" rows="10" readonly placeholder="Processed SQL statement will appear here"></textarea>
+  </div>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function processSQL() {
+      const sqlInput = document.getElementById('sqlInput').value;
+      const sqlOutput = document.getElementById('sqlOutput');
+      const sqlStatementMatch = sqlInput.match(/SELECT.*FROM.*WHERE.*withBindings:/s);
+      const bindingsMatch = sqlInput.match(/withBindings:.*\]/s);
+      if (!sqlStatementMatch || !bindingsMatch) {
+        alert("Invalid input. Please ensure your input includes a SQL statement and bindings.");
+        return;
+      }
+      let sqlStatement = sqlStatementMatch[0].replace('withBindings:', '');
+      const bindingsString = bindingsMatch[0].replace('withBindings: ', '');
+      const bindings = bindingsString.substring(1, bindingsString.length - 1).split(', ');
+      const processedBindings = bindings.map(binding => {
+        const colonIndex = binding.lastIndexOf(':');
+        const bracketIndex = binding.indexOf('[');
+        return binding.substring(colonIndex + 1, bracketIndex).trim();
+      });
+      for (const binding of processedBindings) {
+        sqlStatement = sqlStatement.replace('?', `'${binding}'`);
+      }
+      let formattedSQL = window.sqlFormatter.format(sqlStatement, { language: 'sql' });
+      
+      // Fix issue with extra spaces around %
+      formattedSQL = formattedSQL.replace(/ % /g, '%');
+
+      sqlOutput.value = formattedSQL;
+    }
+  </script>
+</body>
+</html>
