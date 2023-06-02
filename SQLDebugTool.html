@@ -1,107 +1,175 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <!-- Load Bootstrap CSS for general styles and layout -->
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Load Prism CSS for code syntax highlighting -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-okaidia.min.css" rel="stylesheet" />
+  
+  <!-- Load jQuery, a JavaScript library used for DOM manipulation and event handling -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  
+  <!-- Custom styles for elements in the HTML body -->
   <style>
+    /* Set background and text color for the entire body */
     body {
       background-color: #343a40;
       color: #f8f9fa;
     }
+    /* Set background and text color for textarea elements */
     textarea {
       background-color: #212529 !important;
       color: white !important;
     }
+    /* Style for the copy button when it's disabled */
     #copyButton:disabled {
       background-color: grey;
       cursor: not-allowed;
     }
+    /* Style for the copy button */
     #copyButton {
       background-color: green;
     }
+    /* Style for toast messages indicating success */
     .toast-success {
       background-color: #28a745;
     }
+    /* Style for toast messages indicating an error */
     .toast-danger {
       background-color: #dc3545;
     }
   </style>
+  
+  <!-- Load SQL Formatter for formatting SQL queries -->
   <script src="https://cdn.jsdelivr.net/npm/sql-formatter@2.3.3/dist/sql-formatter.min.js"></script>
 </head>
 <body>
   <div class="container">
+    <!-- Heading for the page -->
     <h1 class="my-4 text-center">SQL Debug Tool</h1>
+    
+    <!-- Information alert explaining what the tool does -->
     <div class="alert alert-info" role="alert">
       This tool allows you to paste a SQL debug information into the input box below. When you press the 'Process' button, the tool will replace all '?' characters in the SQL statement with the corresponding binding values from the 'withBindings' section of the debug information. It then formats the resulting SQL statement for readability.
     </div>
+    
+    <!-- Textarea for users to paste their SQL debug information -->
     <textarea id="sqlInput" class="form-control mb-3" rows="10" placeholder="Paste SQL debug information here"></textarea>
+    
+    <!-- Button to process the SQL debug information -->
     <button id="processButton" class="btn btn-primary mb-3" onclick="processSQL()">Process</button>
+    
+    <!-- Button to copy the processed SQL statement to the clipboard -->
     <button id="copyButton" class="btn btn-success mb-3" onclick="copyToClipboard()" disabled>Copy to Clipboard</button>
+    
+    <!-- Container to display the processed SQL statement -->
     <pre id="sqlOutput" class="form-control"><code class="language-sql" placeholder="Processed SQL statement will appear here"></code></pre>
   </div>
-   <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="position: fixed; top: 20px; right: 20px;">
+  
+  <!-- Container for toast messages -->
+  <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="position: fixed; top: 20px; right: 20px;">
     <div class="toast-header">
       <strong class="mr-auto">Message</strong>
-      <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+      <button# The assistant's message was cut-off. I will continue it.
+      type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
         <span aria-hidden="true">&times;</span>
       </button>
     </div>
     <div class="toast-body"></div>
   </div>
+  
+  <!-- Load Bootstrap JavaScript for various UI components -->
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Load Prism JavaScript for code syntax highlighting -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+  
+  <!-- Load Prism SQL syntax highlighter -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-sql.min.js"></script>
+  
   <script>
+    /* Function to process the SQL debug information */
     function processSQL() {
+      // Get the SQL input from the textarea
       const sqlInput = document.getElementById('sqlInput').value;
+      
+      // Get the code element where the output will be displayed
       const sqlOutput = document.querySelector('#sqlOutput > code');
-        const sqlStatementMatch = sqlInput.match(/(SELECT.*FROM|INSERT INTO.*VALUES|UPDATE.*) .*withBindings:/s);
+      
+      // Extract the SQL statement and bindings from the input
+      const sqlStatementMatch = sqlInput.match(/(SELECT.*FROM|INSERT INTO.*VALUES|UPDATE.*) .*withBindings:/s);
       const bindingsMatch = sqlInput.match(/withBindings:.*\]/s);
+      
+      // If either the SQL statement or bindings are missing, show an error toast and stop processing
       if (!sqlStatementMatch || !bindingsMatch) {
         showToast("Invalid input. Please ensure your input includes a SQL statement and bindings.", true);
         return;
       }
+      
+      // Remove 'withBindings:' from the SQL statement
       let sqlStatement = sqlStatementMatch[0].replace('withBindings:', '');
+      
+      // Remove 'withBindings: ' from the bindings string and split it into an array
       const bindingsString = bindingsMatch[0].replace('withBindings: ', '');
       const bindings = bindingsString.substring(1, bindingsString.length - 1).split(', ');
+      
+      // Process each binding to remove the key and only keep the value
       const processedBindings = bindings.map(binding => {
         const colonIndex = binding.lastIndexOf(':');
         const bracketIndex = binding.indexOf('[');
         return binding.substring(colonIndex + 1, bracketIndex).trim();
       });
+      
+      // Replace each '?' in the SQL statement with the corresponding binding
       for (const binding of processedBindings) {
         sqlStatement = sqlStatement.replace('?', `'${binding}'`);
       }
+      
+      // Format the SQL statement for readability
       let formattedSQL = window.sqlFormatter.format(sqlStatement, { language: 'sql' });
       
       // Fix issue with extra spaces around %
       formattedSQL = formattedSQL.replace(/ % /g, '%');
-
+      
+      // Display the formatted SQL statement and highlight it
       sqlOutput.textContent = formattedSQL;
       Prism.highlightElement(sqlOutput);
-
+      
       // Enable the copy button after processing the SQL
       document.getElementById('copyButton').disabled = false;
     }
 
+    /* Function to copy the processed SQL statement to the clipboard */
     function copyToClipboard() {
+      // Get the processed SQL statement
       const sqlOutput = document.querySelector('#sqlOutput > code').textContent;
+      
+      // Copy the SQL statement to the clipboard
       navigator.clipboard.writeText(sqlOutput);
+      
+      // Show a success toast
       showToast("Text has been copied to clipboard.", false);
     }
 
+ /* Function to show a toast message */
     function showToast(message, isError) {
+      // Get the toast element
       const toast = document.getElementById('toast');
+
+      // Set the toast message
       toast.querySelector('.toast-body').textContent = message;
+
+      // Set the toast color based on whether it's an error
       toast.classList.remove('toast-success', 'toast-danger');
-      if (isError) {
-        toast.classList.add('toast-danger');
-      } else {
-        toast.classList.add('toast-success');
-      }
-      $(toast).toast({ delay: 5000 });
-      $(toast).toast('show');
+      toast.classList.add(isError ? 'toast-danger' : 'toast-success');
+	  
+	  // Set the toast messgage to display for 5 seconds
+	  $(toast).toast({ delay: 5000 });
+
+      // Show toast
+      //new bootstrap.Toast(toast).show();
+	  $(toast).toast('show');
     }
   </script>
 </body>
