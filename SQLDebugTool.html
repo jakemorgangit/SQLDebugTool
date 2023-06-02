@@ -98,7 +98,7 @@
       const sqlOutput = document.querySelector('#sqlOutput > code');
       
       // Extract the SQL statement and bindings from the input
-      const sqlStatementMatch = sqlInput.match(/(SELECT.*FROM|INSERT INTO.*VALUES|UPDATE.*) .*withBindings:/s);
+      const sqlStatementMatch = sqlInput.match(/(SELECT.*FROM|INSERT INTO.*VALUES|UPDATE.*|DELETE FROM.*WHERE) .*withBindings:/s);
       const bindingsMatch = sqlInput.match(/withBindings:.*\]/s);
       
       // If either the SQL statement or bindings are missing, show an error toast and stop processing
