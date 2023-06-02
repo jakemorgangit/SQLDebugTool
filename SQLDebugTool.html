@@ -2,6 +2,7 @@
 <html>
 <head>
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" rel="stylesheet" />
   <style>
     body {
       background-color: #343a40;
@@ -18,13 +19,15 @@
     </div>
     <textarea id="sqlInput" class="form-control mb-3" rows="10" placeholder="Paste SQL debug notification here"></textarea>
     <button id="processButton" class="btn btn-primary mb-3" onclick="processSQL()">Process</button>
-    <textarea id="sqlOutput" class="form-control" rows="10" readonly placeholder="Processed SQL statement will appear here"></textarea>
+    <pre id="sqlOutput" class="form-control"><code class="language-sql" placeholder="Processed SQL statement will appear here"></code></pre>
   </div>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-sql.min.js"></script>
   <script>
     function processSQL() {
       const sqlInput = document.getElementById('sqlInput').value;
-      const sqlOutput = document.getElementById('sqlOutput');
+      const sqlOutput = document.querySelector('#sqlOutput > code');
       
       // Updated regular expression to also match INSERT and UPDATE statements
       const sqlStatementMatch = sqlInput.match(/(SELECT.*FROM|INSERT INTO.*VALUES|UPDATE.*) .*withBindings:/s);
@@ -49,7 +52,8 @@
       // Fix issue with extra spaces around %
       formattedSQL = formattedSQL.replace(/ % /g, '%');
 
-      sqlOutput.value = formattedSQL;
+      sqlOutput.textContent = formattedSQL;
+      Prism.highlightElement(sqlOutput);
     }
   </script>
 </body>
