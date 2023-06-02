@@ -2,11 +2,29 @@
 <html>
 <head>
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-okaidia.min.css" rel="stylesheet" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <style>
     body {
       background-color: #343a40;
       color: #f8f9fa;
+    }
+    textarea {
+      background-color: #212529 !important;
+      color: white !important;
+    }
+    #copyButton:disabled {
+      background-color: grey;
+      cursor: not-allowed;
+    }
+    #copyButton {
+      background-color: green;
+    }
+    .toast-success {
+      background-color: #28a745;
+    }
+    .toast-danger {
+      background-color: #dc3545;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/sql-formatter@2.3.3/dist/sql-formatter.min.js"></script>
@@ -15,11 +33,21 @@
   <div class="container">
     <h1 class="my-4 text-center">SQL Debug Tool</h1>
     <div class="alert alert-info" role="alert">
-      This tool allows you to paste a SQL debug notification into the input box below. When you press the 'Process' button, the tool will replace all '?' characters in the SQL statement with the corresponding binding values from the 'withBindings' section of the debug notification. It then formats the resulting SQL statement for readability.
+      This tool allows you to paste a SQL debug information into the input box below. When you press the 'Process' button, the tool will replace all '?' characters in the SQL statement with the corresponding binding values from the 'withBindings' section of the debug information. It then formats the resulting SQL statement for readability.
     </div>
-    <textarea id="sqlInput" class="form-control mb-3" rows="10" placeholder="Paste SQL debug notification here"></textarea>
+    <textarea id="sqlInput" class="form-control mb-3" rows="10" placeholder="Paste SQL debug information here"></textarea>
     <button id="processButton" class="btn btn-primary mb-3" onclick="processSQL()">Process</button>
+    <button id="copyButton" class="btn btn-success mb-3" onclick="copyToClipboard()" disabled>Copy to Clipboard</button>
     <pre id="sqlOutput" class="form-control"><code class="language-sql" placeholder="Processed SQL statement will appear here"></code></pre>
+  </div>
+   <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="position: fixed; top: 20px; right: 20px;">
+    <div class="toast-header">
+      <strong class="mr-auto">Message</strong>
+      <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="toast-body"></div>
   </div>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
@@ -28,12 +56,10 @@
     function processSQL() {
       const sqlInput = document.getElementById('sqlInput').value;
       const sqlOutput = document.querySelector('#sqlOutput > code');
-      
-      // Updated regular expression to also match INSERT and UPDATE statements
-      const sqlStatementMatch = sqlInput.match(/(SELECT.*FROM|INSERT INTO.*VALUES|UPDATE.*) .*withBindings:/s);
+        const sqlStatementMatch = sqlInput.match(/(SELECT.*FROM|INSERT INTO.*VALUES|UPDATE.*) .*withBindings:/s);
       const bindingsMatch = sqlInput.match(/withBindings:.*\]/s);
       if (!sqlStatementMatch || !bindingsMatch) {
-        alert("Invalid input. Please ensure your input includes a SQL statement and bindings.");
+        showToast("Invalid input. Please ensure your input includes a SQL statement and bindings.", true);
         return;
       }
       let sqlStatement = sqlStatementMatch[0].replace('withBindings:', '');
@@ -54,6 +80,28 @@
 
       sqlOutput.textContent = formattedSQL;
       Prism.highlightElement(sqlOutput);
+
+      // Enable the copy button after processing the SQL
+      document.getElementById('copyButton').disabled = false;
+    }
+
+    function copyToClipboard() {
+      const sqlOutput = document.querySelector('#sqlOutput > code').textContent;
+      navigator.clipboard.writeText(sqlOutput);
+      showToast("Text has been copied to clipboard.", false);
+    }
+
+    function showToast(message, isError) {
+      const toast = document.getElementById('toast');
+      toast.querySelector('.toast-body').textContent = message;
+      toast.classList.remove('toast-success', 'toast-danger');
+      if (isError) {
+        toast.classList.add('toast-danger');
+      } else {
+        toast.classList.add('toast-success');
+      }
+      $(toast).toast({ delay: 5000 });
+      $(toast).toast('show');
     }
   </script>
 </body>
