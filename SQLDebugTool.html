@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -141,16 +142,46 @@
     }
 
     /* Function to copy the processed SQL statement to the clipboard */
-    function copyToClipboard() {
-      // Get the processed SQL statement
-      const sqlOutput = document.querySelector('#sqlOutput > code').textContent;
-      
-      // Copy the SQL statement to the clipboard
-      navigator.clipboard.writeText(sqlOutput);
-      
-      // Show a success toast
-      showToast("Text has been copied to clipboard.", false);
+		function copyToClipboard() {
+		  // Get the processed SQL statement
+		  const sqlOutput = document.querySelector('#sqlOutput > code').textContent;
+
+		  if (navigator.clipboard) {
+			// If navigator.clipboard is available, use it
+			navigator.clipboard.writeText(sqlOutput).then(function() {
+			  showToast("Text has been copied to clipboard.", false);
+			}, function(err) {
+			  showToast("Failed to copy text. Please try again.", true);
+			});
+		  } else {
+			// If navigator.clipboard is not available, fall back to document.execCommand
+			copyToClipboardFallback(sqlOutput);
+		  }
+		}
+
+function copyToClipboardFallback(text) {
+  // Create a temporary textarea to hold the text to be copied
+  const tempTextarea = document.createElement('textarea');
+  tempTextarea.value = text;
+  document.body.appendChild(tempTextarea);
+
+  // Select the text
+  tempTextarea.select();
+
+  try {
+    // Try to copy the text
+    if (!document.execCommand('copy')) {
+      throw new Error('copy command was unsuccessful');
     }
+    showToast("Text has been copied to clipboard.", false);
+  } catch (err) {
+    showToast("Failed to copy text. Please try again.", true);
+  } finally {
+       // Remove the temporary textarea
+    document.body.removeChild(tempTextarea);
+  }
+}
+
 
  /* Function to show a toast message */
     function showToast(message, isError) {
