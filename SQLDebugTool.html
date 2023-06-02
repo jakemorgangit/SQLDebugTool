@@ -25,7 +25,9 @@
     function processSQL() {
       const sqlInput = document.getElementById('sqlInput').value;
       const sqlOutput = document.getElementById('sqlOutput');
-      const sqlStatementMatch = sqlInput.match(/SELECT.*FROM.*WHERE.*withBindings:/s);
+      
+      // Updated regular expression to also match INSERT and UPDATE statements
+      const sqlStatementMatch = sqlInput.match(/(SELECT.*FROM|INSERT INTO.*VALUES|UPDATE.*) .*withBindings:/s);
       const bindingsMatch = sqlInput.match(/withBindings:.*\]/s);
       if (!sqlStatementMatch || !bindingsMatch) {
         alert("Invalid input. Please ensure your input includes a SQL statement and bindings.");
