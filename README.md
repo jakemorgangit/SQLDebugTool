@@ -8,4 +8,4 @@ It also prettifies the SQL output.  The full error stack can be pasted and only 
 This tool allows you to paste a SQL debug notification into the input box below. 
 When you press the 'Process' button, the tool will replace all '?' characters in the SQL statement with the corresponding binding values from the 'withBindings' section of the debug notification. It then formats the resulting SQL statement for readability.
 
-Demo here:  https://jakemorgan.co.uk/projects/SQLDebugTool.html
+Demo here:  https://jakemorgan.co.uk/projects/SQLDebugTool
